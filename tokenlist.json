@@ -1,0 +1,53 @@
+{
+  "name": "TiffyAI Token List",
+  "logoURI": "https://tiffyai.github.io/Blue-Key-Claim/TiffyAI-Token.png",
+  "keywords": ["tiffy", "ai", "bnb", "gamified", "token"],
+  "timestamp": "2025-06-24T08:00:00+02:00",
+  "version": {
+    "major": 1,
+    "minor": 2,
+    "patch": 0
+  },
+  "tokens": [
+    {
+      "chainId": 56,
+      "address": "0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5",
+      "name": "TiffyAI",
+      "symbol": "TIFFY",
+      "decimals": 18,
+      "logoURI": "https://tiffyai.github.io/Blue-Key-Claim/TiffyAI-Token.png",
+      "website": "https://www.tiffyai.co.za",
+      "description": "TiffyAI is the smartest token on BNB Chain, powering an AI-driven GameFi ecosystem with treasure mechanics, staking, and milestone-based rewards.",
+      "tags": ["ai", "bnb", "gamefi", "smart-token"],
+      "explorer": "https://bscscan.com/token/0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5",
+      "sourcify": "https://repo.sourcify.dev/56/0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5",
+      "audit": {
+        "status": "community-audited",
+        "link": "https://github.com/tiffyai/audits/blob/main/audit-summary.pdf"
+      },
+      "security": {
+        "proxyContract": false,
+        "ownershipRenounced": false,
+        "buyTax": "3%",
+        "sellTax": "3%",
+        "externalCalls": true,
+        "walletTax": true,
+        "permanentOwnership": false,
+        "taxModifiable": true,
+        "transfersPausable": false,
+        "sellLimit": false,
+        "antiWhale": false,
+        "transferCooldown": "30s per wallet",
+        "whitelist": true,
+        "selfDestructable": false
+      },
+      "uniqueFeatures": {
+        "blueKeySystem": "Gamified key-claiming with milestone unlocks (3 = Lucky Wheel, 10 = Gold Key)",
+        "aiTradingGateway": "Access to AI trading unlocks after 10 Gold Keys",
+        "treasureClaiming": "Claim system with cooldowns and social milestones",
+        "referralBoost": "Built-in share-to-earn and community growth model",
+        "stakingWithNFTBoost": "Staking pool linked to blessings, doubled rewards with NFT"
+      }
+    }
+  ]
+}
