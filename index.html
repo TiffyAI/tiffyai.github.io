@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Booting up TiffyAI...</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      background-size: cover;
+      background-position: center;
+      transition: background-image 0.5s ease-in-out;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #4af0f8;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .spinner {
+      border: 6px solid rgba(255, 255, 255, 0.1);
+      border-top: 6px solid #ff4af8;
+      border-right: 6px solid #4af0f8;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin-top: 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    p {
+      color: #9055ff;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Activating TiffyAI...</h2>
+  <div class="spinner"></div>
+  <p>If nothing happens, <a href="/On-boarding-/" style="color: #4af0f8;">click here</a></p>
+
+  <script>
+    const backgrounds = [
+      'loading.jpg',
+      'loading1.jpg',
+      'loading2.jpg',
+      'loading3.jpg',
+      'loading4.jpg',
+      'loading5.jpg'
+    ];
+
+    let i = 0;
+
+    function cycleBackgrounds() {
+      if (i < backgrounds.length) {
+        document.body.style.backgroundImage = `url('${backgrounds[i]}')`;
+        i++;
+        setTimeout(cycleBackgrounds, 600); // switch every 600ms
+      } else {
+        setTimeout(() => {
+          window.location.href = '/On-boarding-/';
+        }, 800);
+      }
+    }
+
+    cycleBackgrounds();
+  </script>
+</body>
+</html>
