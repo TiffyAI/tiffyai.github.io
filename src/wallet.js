@@ -1,35 +1,19 @@
-// TiffyAI GitHub-hosted wallet setup (focus: Miner app first)
-
-import { createWeb3Wallet } from '@reown/walletkit';
-import { Core } from '@walletconnect/core';
-import { buildApprovedNamespaces } from '@walletconnect/utils';
+import { Core } from '@walletconnect/core'
+import { WalletKit } from '@reown/walletkit'
 
 const core = new Core({
-  projectId: 'bf40c7dcdb05f06f2769573103007576' // Replace this with your WalletConnect project ID from cloud.walletconnect.com
-});
+  projectId: 'bf40c7dcdb05f06f2769573103007576' // your actual WalletConnect project ID
+})
 
-async function setupWallet() {
-  try {
-    const wallet = await createWeb3Wallet({
-      core,
-      metadata: {
-        name: "TiffyAI Miner",
-        description: "Mine and upgrade using your wallet",
-        url: "https://tiffyai.github.io", // use the verified GitHub domain
-        icons: ["https://tiffyai.github.io/logo.png"] // change this if you have another icon
-      }
-    });
-
-    window.tiffyWallet = wallet;
-    console.log("✅ Wallet initialized successfully");
-
-    // Example event: Log connections
-    wallet.engine.signClient.on('session_proposal', (proposal) => {
-      console.log("📡 WalletConnect session proposal:", proposal);
-    });
-  } catch (err) {
-    console.error("❌ Wallet initialization failed:", err);
-  }
+const metadata = {
+  name: 'TiffyAI',
+  description: `Decentralized Wealth.
+TiffyAI is a hyper-intelligent Web3 ecosystem merging AI-powered tools, tokenized rewards, and gamified finance.`,
+  url: 'https://tiffyai.github.io', // this must match your live domain
+  icons: ['https://imagedelivery.net/_aTEfDRm7z3tKgu9JhfeKA/ddc202a2-e490-4cfe-2481-52e3ae276400/sm']
 }
 
-setupWallet();
+export const walletKit = await WalletKit.init({
+  core,
+  metadata
+})
