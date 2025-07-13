@@ -4,13 +4,14 @@
   <meta charset="UTF-8" />
   <title>TiffyAI Miner</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/core@2.6.2/dist/umd/index.umd.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@reown/walletkit@1.0.1/dist/index.umd.js"></script>
+
+  <!-- ✅ Libraries: WalletConnectCore, WalletKit, Web3 -->
+  <script defer src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@walletconnect/core@2.6.2/dist/umd/index.umd.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@reown/walletkit@1.0.1/dist/index.umd.js"></script>
+
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
+    body {
       background: black;
       font-family: 'Segoe UI', sans-serif;
       color: #00ffe7;
@@ -18,59 +19,50 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100%;
+      height: 100vh;
+      margin: 0;
     }
-
-    h1 {
-      font-size: 2.5rem;
-      margin: 30px 0 10px;
-    }
-
-    .info {
-      font-size: 1.3rem;
-      margin: 5px 0;
-    }
-
+    h1 { font-size: 2rem; margin: 1rem 0; }
+    .info { margin: 0.5rem 0; }
     button {
       background: #00ffe7;
       color: #000;
+      padding: 12px 25px;
+      margin: 0.5rem;
       border: none;
-      padding: 15px 30px;
-      margin: 10px;
-      font-size: 1.1rem;
-      border-radius: 10px;
+      border-radius: 8px;
+      font-size: 1rem;
       cursor: pointer;
     }
-
-    button:hover {
-      background: #00c6b0;
-    }
-
-    #withdrawBtn:disabled {
+    button:disabled {
       background: gray;
       cursor: not-allowed;
     }
   </style>
 </head>
 <body>
-  <h1>🛠 TiffyAI Miner</h1>
-  <div id="tiffyCounter" class="info">⛏️ 0.0000000 TIFFY</div>
-  <div id="blueKeys" class="info">🔵 Blue Keys: 0</div>
-  <div id="goldKeys" class="info">🟡 Gold Keys: 0</div>
-
+  <h1>🛠️ TiffyAI Miner</h1>
+  <div class="info" id="tiffyCounter">⛏️ 0.0000000 TIFFY</div>
+  <div class="info" id="blueKeys">🔵 Blue Keys: 0</div>
+  <div class="info" id="goldKeys">🟡 Gold Keys: 0</div>
   <button id="connectBtn">🔌 Connect Wallet</button>
   <button id="withdrawBtn" disabled>💸 Withdraw</button>
   <button id="boostBtn">⚡ Upgrade With Key</button>
 
+  <!-- ✅ App logic -->
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener("DOMContentLoaded", () => {
+      if (!window.WalletConnectCore || !window.WalletKit) {
+        console.error("❌ Wallet libraries not loaded:", window.WalletConnectCore, window.WalletKit);
+        alert("❌ Wallet libraries not ready. Please check your connection or refresh.");
+        return;
+      }
+
+      // --- Wallet & Miner Logic ---
       const CK = 'tiffy_balance', SK = 'tiffy_speed', LK = 'tiffy_last_claim';
       const threshold = 1, cooldown = 24 * 60 * 60 * 1000;
       let balance = parseFloat(localStorage.getItem(CK)) || 0;
       let speed = parseFloat(localStorage.getItem(SK)) || 0.0000001;
-
-      const CONTRACT = "0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5";
-      const ABI = [{ type: "function", name: "claim", stateMutability: "payable", inputs: [], outputs: [] }];
 
       const ctr = document.getElementById('tiffyCounter');
       const bD = document.getElementById('blueKeys');
@@ -79,54 +71,51 @@
       const wb = document.getElementById('withdrawBtn');
       const ub = document.getElementById('boostBtn');
 
-      function updKey() {
-        let bk = parseInt(localStorage.getItem('tiffyBlueKeys')) || 0;
-        let gk = parseInt(localStorage.getItem('gold')) || 0;
-        bD.textContent = `🔵 Blue Keys: ${bk}`;
-        gD.textContent = `🟡 Gold Keys: ${gk}`;
+      function updateDisplay() {
+        ctr.textContent = `⛏️ ${balance.toFixed(7)} TIFFY`;
+        const last = localStorage.getItem(LK);
+        const can = balance >= threshold && (!last || Date.now() - parseInt(last) > cooldown);
+        wb.disabled = !can;
       }
 
-      function updTiff() {
-        ctr.textContent = `⛏️ ${balance.toFixed(7)} TIFFY`;
-        const lastClaim = localStorage.getItem(LK);
-        const canClaim = balance >= threshold && (!lastClaim || Date.now() - parseInt(lastClaim) > cooldown);
-        wb.disabled = !canClaim;
+      function updateKeys() {
+        const blue = parseInt(localStorage.getItem("tiffyBlueKeys")) || 0;
+        const gold = parseInt(localStorage.getItem("gold")) || 0;
+        bD.textContent = `🔵 Blue Keys: ${blue}`;
+        gD.textContent = `🟡 Gold Keys: ${gold}`;
       }
 
       setInterval(() => {
-        const lastClaim = localStorage.getItem(LK);
-        const ok = !lastClaim || Date.now() - parseInt(lastClaim) > cooldown;
-        if (balance < threshold && ok) {
+        const last = localStorage.getItem(LK);
+        const canMine = !last || Date.now() - parseInt(last) > cooldown;
+        if (balance < threshold && canMine) {
           balance += speed;
           localStorage.setItem(CK, balance);
-          updTiff();
+          updateDisplay();
         }
       }, 1000);
 
-      ub.addEventListener('click', () => {
-        let bk = parseInt(localStorage.getItem('tiffyBlueKeys')) || 0;
-        if (bk < 1) return alert("❌ Not enough Blue Keys.");
-        bk--; speed *= 2;
-        alert("⚡ Mining Power Boosted!");
-        localStorage.setItem('tiffyBlueKeys', bk);
+      ub.addEventListener("click", () => {
+        let blue = parseInt(localStorage.getItem("tiffyBlueKeys")) || 0;
+        if (blue < 1) return alert("❌ Not enough Blue Keys.");
+        blue--;
+        speed *= 2;
+        localStorage.setItem("tiffyBlueKeys", blue);
         localStorage.setItem(SK, speed);
-        updKey();
+        alert("⚡ Boost activated!");
+        updateKeys();
       });
 
       let web3, acct, contract;
+      const CONTRACT = "0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5";
+      const ABI = [{ type: "function", name: "claim", stateMutability: "payable", inputs: [], outputs: [] }];
 
-      cb.addEventListener('click', async () => {
-        if (!window.WalletConnectCore || !window.WalletKit) {
-          console.error('❌ WalletConnectCore or WalletKit not loaded:', window.WalletConnectCore, window.WalletKit);
-          alert('❌ Wallet libraries not loaded. Please refresh or check connection.');
-          return;
-        }
-
+      cb.addEventListener("click", async () => {
         try {
           const { Core } = window.WalletConnectCore;
           const { WalletKit } = window.WalletKit;
-
           const core = new Core({ projectId: "bf40c7dcdb05f06f2769573103007576" });
+
           const kit = await WalletKit.init({
             core,
             metadata: {
@@ -138,44 +127,41 @@
           });
 
           const session = await kit.connect();
-          if (!session) throw new Error("No session created");
-
           const provider = kit.getProvider();
           web3 = new Web3(provider);
 
           const accounts = await web3.eth.getAccounts();
           acct = accounts[0];
           contract = new web3.eth.Contract(ABI, CONTRACT);
-
           cb.innerText = `✅ ${acct.slice(0, 6)}...Connected`;
           cb.disabled = true;
-          updTiff();
-        } catch (e) {
-          console.error(e);
+          updateDisplay();
+        } catch (err) {
+          console.error("❌ Connect failed", err);
           alert("❌ Connection failed.");
         }
       });
 
-      wb.addEventListener('click', async () => {
-        if (!contract || !acct) return alert("❌ Connect your wallet first.");
+      wb.addEventListener("click", async () => {
+        if (!contract || !acct) return alert("❌ Connect wallet first.");
         try {
           await contract.methods.claim().send({
             from: acct,
             value: web3.utils.toWei("0.00086", "ether")
           });
-          alert("💰 1 TIFFY Claimed!");
+          alert("✅ 1 TIFFY Claimed!");
           balance = 0;
           localStorage.setItem(CK, 0);
           localStorage.setItem(LK, Date.now());
-          updTiff();
-        } catch (e) {
-          console.error(e);
-          alert("❌ Claim failed. Check balance and cooldown.");
+          updateDisplay();
+        } catch (err) {
+          console.error("❌ Claim failed", err);
+          alert("❌ Claim failed.");
         }
       });
 
-      updKey();
-      updTiff();
+      updateDisplay();
+      updateKeys();
     });
   </script>
 </body>
