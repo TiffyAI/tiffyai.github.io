@@ -3,26 +3,86 @@
 <head>
   <meta charset="UTF-8" />
   <title>TiffyAI Miner</title>
-<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
-<script src="https://unpkg.com/@walletconnect/core@2.6.2/dist/umd/index.umd.js"></script>
-<script src="https://unpkg.com/@reown/walletkit@1.0.1/dist/index.umd.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+  <script src="https://unpkg.com/@walletconnect/core@2.6.2/dist/umd/index.umd.js"></script>
+  <script src="https://unpkg.com/@reown/walletkit@1.0.1/dist/index.umd.js"></script>
   <style>
-    html, body { margin:0; padding:0; overflow:hidden; height:100%; width:100%; font-family:'Segoe UI'; color:#00ffe7;
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+      width: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      color: #00ffe7;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: black;
     }
-    /* ...your existing styles... */
-    #backgroundVideo { position:fixed; top:0; left:0; width:100vw; height:97vh; object-fit:cover; z-index:-1; }
-    #fallbackBackground { /* your styling... */ }
-    h1 { /* your styling... */ }
-    .info { /* your styling... */ }
-    button { /* your styling... */ }
-    #withdrawBtn:disabled { background:gray; cursor:not-allowed; }
+
+    #backgroundVideo {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 97vh;
+      object-fit: cover;
+      z-index: -1;
+    }
+
+    #fallbackBackground {
+      background-image: url('miner.jpg');
+      background-size: cover;
+      background-position: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 97%;
+      z-index: -2;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-top: 40px;
+      text-shadow: 0 0 10px #00ffe7;
+    }
+
+    .info {
+      font-size: 1.3rem;
+      margin: 10px 0;
+      text-shadow: 0 0 5px #00ffe7;
+    }
+
+    button {
+      background: #00ffe7;
+      color: #000;
+      border: none;
+      padding: 15px 30px;
+      margin: 10px;
+      font-size: 1.1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background: #00c6b0;
+    }
+
+    #withdrawBtn:disabled {
+      background: gray;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
   <div id="fallbackBackground"></div>
   <video id="backgroundVideo" autoplay muted loop playsinline>
-    <source src="/Mining-Machine-/assets/mine-BP64jN9u.mp4" type="video/mp4"/>
+    <source src="mine.mp4" type="video/mp4" />
   </video>
 
   <h1>🛠 TiffyAI Miner</h1>
@@ -35,68 +95,102 @@
   <button id="boostBtn">⚡ Upgrade With Key</button>
 
   <script>
-    // ─── Your Ledger & Miner logic unchanged ─────────────────────────────
     const CONTRACT = "0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5";
-    const ABI = [{ type:"function", name:"claim", stateMutability:"payable", inputs:[], outputs:[] }];
-    const CK = 'tiffy_balance', SK = 'tiffy_speed', LK = 'tiffy_last_claim', threshold=1, cooldown=86400000;
-    let balance = parseFloat(localStorage.getItem(CK))||0, speed = parseFloat(localStorage.getItem(SK))||0.0000001;
+    const ABI = [{ "type": "function", "name": "claim", "stateMutability": "payable", "inputs": [], "outputs": [] }];
+
+    const CK = 'tiffy_balance', SK = 'tiffy_speed', LK = 'tiffy_last_claim', threshold = 1, cooldown = 86400000;
+    let balance = parseFloat(localStorage.getItem(CK)) || 0, speed = parseFloat(localStorage.getItem(SK)) || 0.0000001;
+
     const D = document;
-    const ctr = D.getElementById('tiffyCounter'), bD=D.getElementById('blueKeys'), gD=D.getElementById('goldKeys');
-    const cb = D.getElementById('connectBtn'), wb=D.getElementById('withdrawBtn'), ub=D.getElementById('boostBtn');
-    const bgV=D.getElementById('backgroundVideo');
+    const ctr = D.getElementById('tiffyCounter'), bD = D.getElementById('blueKeys'), gD = D.getElementById('goldKeys');
+    const cb = D.getElementById('connectBtn'), wb = D.getElementById('withdrawBtn'), ub = D.getElementById('boostBtn');
+    const bgV = D.getElementById('backgroundVideo');
 
-    function updKey(){ let bk=parseInt(localStorage.getItem('tiffyBlueKeys'))||0, gk=parseInt(localStorage.getItem('gold'))||0;
-      bD.textContent=`🔵 Blue Keys: ${bk}`; gD.textContent=`🟡 Gold Keys: ${gk}`; }
-    function updTiff(){
-      ctr.textContent=`⛏️ ${balance.toFixed(7)} TIFFY`;
-      let lc=localStorage.getItem(LK), can=balance>=threshold &&(!lc||Date.now()-parseInt(lc)>cooldown);
-      wb.disabled=!can;
+    function updKey() {
+      let bk = parseInt(localStorage.getItem('tiffyBlueKeys')) || 0, gk = parseInt(localStorage.getItem('gold')) || 0;
+      bD.textContent = `🔵 Blue Keys: ${bk}`; gD.textContent = `🟡 Gold Keys: ${gk}`;
     }
-    function setBG(src, loop=true, t=null){ bgV.loop=loop; bgV.src=src; bgV.load(); bgV.play();
-      if(!loop && t) setTimeout(()=>setBG('mine.mp4', true), t); }
-    setInterval(()=>{ let lc=localStorage.getItem(LK), ok=!lc||Date.now()-parseInt(lc)>cooldown;
-      if(balance<threshold &&ok){balance+=speed;localStorage.setItem(CK,balance);updTiff()} },1000);
-    ub.addEventListener('click',()=>{
-      let bk=parseInt(localStorage.getItem('tiffyBlueKeys'))||0;
-      if(bk<1) return alert("❌ Not enough Blue Keys.");
-      bk--; speed*=2; alert("⚡ Mining Power Boosted!");
-      localStorage.setItem('tiffyBlueKeys',bk); localStorage.setItem(SK,speed);
-      setBG('upgrade.mp4',false,3000); updKey();
-    });
-    updKey(); updTiff(); setBG('mine.mp4',true);
 
-    // ─── WalletConnect + MetaMask via Reown WalletKit ─────────────────────
+    function updTiff() {
+      ctr.textContent = `⛏️ ${balance.toFixed(7)} TIFFY`;
+      let lc = localStorage.getItem(LK), can = balance >= threshold && (!lc || Date.now() - parseInt(lc) > cooldown);
+      wb.disabled = !can;
+    }
+
+    function setBG(src, loop = true, t = null) {
+      bgV.loop = loop; bgV.src = src; bgV.load(); bgV.play();
+      if (!loop && t) setTimeout(() => setBG('mine.mp4', true), t);
+    }
+
+    setInterval(() => {
+      let lc = localStorage.getItem(LK), ok = !lc || Date.now() - parseInt(lc) > cooldown;
+      if (balance < threshold && ok) {
+        balance += speed;
+        localStorage.setItem(CK, balance);
+        updTiff();
+      }
+    }, 1000);
+
+    ub.addEventListener('click', () => {
+      let bk = parseInt(localStorage.getItem('tiffyBlueKeys')) || 0;
+      if (bk < 1) return alert("❌ Not enough Blue Keys.");
+      bk--; speed *= 2;
+      alert("⚡ Mining Power Boosted!");
+      localStorage.setItem('tiffyBlueKeys', bk);
+      localStorage.setItem(SK, speed);
+      setBG('upgrade.mp4', false, 3000); updKey();
+    });
+
+    updKey(); updTiff(); setBG('mine.mp4', true);
+
     async function connectWallet() {
       const { Core } = window.WalletConnectCore;
       const { WalletKit } = window.WalletKit;
-      const core = new Core({ projectId:"bf40c7dcdb05f06f2769573103007576" });
-      const kit = await WalletKit.init({ core, metadata:{
-        name:"TiffyAI Miner", description:"Mine securely", url:location.href,
-        icons:["https://tiffyai.github.io/TiffyAI-Token.png"]
-      }});
-      const s = await kit.connect();
-      if(!s) throw "no session";
-      const prov = kit.getProvider(); return new window.Web3(prov);
+
+      const core = new Core({ projectId: "bf40c7dcdb05f06f2769573103007576" });
+      const kit = await WalletKit.init({
+        core,
+        metadata: {
+          name: "TiffyAI Miner",
+          description: "Claim rewards on BNB chain",
+          url: location.href,
+          icons: ["https://tiffyai.github.io/TiffyAI-Token.png"]
+        }
+      });
+
+      const session = await kit.connect();
+      if (!session) throw new Error("❌ No session");
+      const provider = kit.getProvider();
+      return new window.Web3(provider);
     }
 
     let web3, acct, contract;
-    cb.addEventListener('click', async()=>{
-      try{
+    cb.addEventListener('click', async () => {
+      try {
         web3 = await connectWallet();
-        const a = (await web3.eth.getAccounts())[0]; acct = a;
+        const accounts = await web3.eth.getAccounts();
+        acct = accounts[0];
         contract = new web3.eth.Contract(ABI, CONTRACT);
-        cb.innerText=`✅ ${acct.slice(0,6)}...Connected`; cb.disabled=true; updTiff();
-      }catch(e){console.error(e); alert("❌ Connect failed.");}
+        cb.innerText = `✅ ${acct.slice(0, 6)}...Connected`;
+        cb.disabled = true; updTiff();
+      } catch (e) {
+        console.error(e); alert("❌ Connect failed.");
+      }
     });
 
-    wb.addEventListener('click', async()=>{
-      if(!contract||!acct) return alert("❌ Connect first!");
-      try{
-        await contract.methods.claim().send({from:acct, value:web3.utils.toWei('0.00086','ether')});
+    wb.addEventListener('click', async () => {
+      if (!contract || !acct) return alert("❌ Connect first!");
+      try {
+        await contract.methods.claim().send({ from: acct, value: web3.utils.toWei("0.00086", "ether") });
         alert("💰 1 TIFFY Claimed!");
-        setBG('withdraw.mp4',false,3000);
-        balance=0; localStorage.setItem(CK,0); localStorage.setItem(LK,Date.now()); updTiff();
-      }catch(e){console.error(e); alert("❌ Claim failed.");}
+        setBG('withdraw.mp4', false, 3000);
+        balance = 0;
+        localStorage.setItem(CK, 0);
+        localStorage.setItem(LK, Date.now());
+        updTiff();
+      } catch (e) {
+        console.error(e); alert("❌ Claim failed.");
+      }
     });
   </script>
 </body>
