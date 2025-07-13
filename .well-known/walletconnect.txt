@@ -1,0 +1,5 @@
+{
+  "domain": "tiffyai.github.io",
+  "address": "0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5",
+  "projectId": "bf40c7dcdb05f06f2769573103007576"
+}
