@@ -1,0 +1,21 @@
+{
+  "name": "TiffyAI Web3 Zone",
+  "short_name": "TiffyAI",
+  "start_url": "/Start",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#00ffff",
+  "description": "Earn Blue Keys, unlock treasures & claim Web3 rewards with TiffyAI.",
+  "icons": [
+    {
+      "src": "https://tiffyai.github.io/TiffyAI-Token.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://tiffyai.github.io/TiffyAI-Token.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
