@@ -3,27 +3,22 @@ import logging
 import requests
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler,
-    ContextTypes,
-)
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
+# Load environment variables
 load_dotenv()
 
-# --- Environment Variables ---
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 BSCSCAN_API_KEY = os.getenv("BSCSCAN_API_KEY")
 
-# --- Static Info ---
 TOKEN_CONTRACT = "0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5"
 PRICE_API_URL = "https://tiffyai.github.io/TIFFY-Market-Value/price.json"
 PORTAL_LINK = "https://t.me/TiffyAI_Bot?start=portal"
 
 logging.basicConfig(level=logging.INFO)
 
-# --- Command Handlers ---
+# --- Handlers ---
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -81,21 +76,21 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🤖 AI is listening... (Coming soon 🔗)")
 
-# --- App Startup ---
+# --- Entry point ---
+
 def main():
-    application = ApplicationBuilder().token(BOT_TOKEN).build()
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("claim", claim))
-    application.add_handler(CommandHandler("wallet", wallet))
-    application.add_handler(CommandHandler("trade", trade))
-    application.add_handler(CommandHandler("price", price))
-    application.add_handler(CommandHandler("leaderboard", leaderboard))
-    application.add_handler(CommandHandler("ai", ai))
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("claim", claim))
+    app.add_handler(CommandHandler("wallet", wallet))
+    app.add_handler(CommandHandler("trade", trade))
+    app.add_handler(CommandHandler("price", price))
+    app.add_handler(CommandHandler("leaderboard", leaderboard))
+    app.add_handler(CommandHandler("ai", ai))
 
-    print("✅ TiffyAI Bot is online and polling.")
-    application.run_polling()
-
+    print("🤖 TiffyAI Bot is online.")
+    app.run_polling()
 
 if __name__ == "__main__":
     main()
