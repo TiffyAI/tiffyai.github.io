@@ -11,7 +11,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-AI_BACKEND_URL = os.getenv("AI_BACKEND_URL")  # e.g. https://tiffyai-bot.onrender.com/ask
+AI_BACKEND_URL = os.getenv("AI_BACKEND_URL")  # e.g. https://your-ai-backend.onrender.com/ask
 RENDER_URL = os.getenv("RENDER_EXTERNAL_URL")
 BSCSCAN_API_KEY = os.getenv("BSCSCAN_API_KEY")
 
@@ -19,7 +19,6 @@ PRICE_API_URL = "https://tiffyai.github.io/TIFFY-Market-Value/price.json"
 TOKEN_CONTRACT = "0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5"
 PORTAL_LINK = "https://tiffyai.github.io/Start"
 
-# Initialize Telegram app
 app = Application.builder().token(BOT_TOKEN).build()
 
 # --- Telegram Command Handlers ---
@@ -43,7 +42,8 @@ async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"💎 Current $TIFFY price: *${price:.4f}*",
             parse_mode="Markdown"
         )
-    except Exception:
+    except Exception as e:
+        logging.error("Price fetch error: %s", e)
         await update.message.reply_text("⚠️ Sorry, price unavailable.")
 
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -60,7 +60,8 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
             addr = h["TokenHolderAddress"]
             msg += f"`{addr[:6]}...{addr[-4:]}` — {bal:.2f} $TIFFY\n"
         await update.message.reply_text(msg, parse_mode="Markdown")
-    except Exception:
+    except Exception as e:
+        logging.error("Leaderboard fetch error: %s", e)
         await update.message.reply_text("⚠️ Leaderboard unavailable.")
 
 async def ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -84,14 +85,14 @@ async def ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.error("AI error: %s", e)
         await update.message.reply_text("⚠️ AI failed—check backend.")
 
-# Register handlers
+# --- Register Telegram Command Handlers ---
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("claim", claim))
 app.add_handler(CommandHandler("price", price))
 app.add_handler(CommandHandler("leaderboard", leaderboard))
 app.add_handler(CommandHandler("ai", ai))
 
-# FastAPI webserver
+# --- FastAPI Web Server ---
 web = FastAPI()
 
 @web.on_event("startup")
