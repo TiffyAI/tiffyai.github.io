@@ -64,11 +64,47 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.error("Leaderboard fetch error: %s", e)
         await update.message.reply_text("⚠️ Leaderboard unavailable.")
 
+async def wallet(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "🔐 *Wallet Connection Guide:*\n\n"
+        "You can connect your wallet using MetaMask, Trust Wallet, or OKX.\n\n"
+        "Visit the portal ➤ https://tiffyai.github.io/Start and follow the connect prompts.\n\n"
+        "Need help? DM @TiffyAI_Support",
+        parse_mode="Markdown"
+    )
+
+async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "📘 *About $TIFFY Token:*\n\n"
+        "TIFFY is the native token powering the TiffyAI ecosystem.\n"
+        "- Earn it via quests & faucets\n"
+        "- Stake it in future updates\n"
+        "- Trade it on decentralized exchanges\n\n"
+        "Explore ➤ https://tiffyai.github.io",
+        parse_mode="Markdown"
+    )
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "🛠️ *Bot Help Guide:*\n\n"
+        "`/start` – Introduction to TiffyAI\n"
+        "`/claim` – Access the Blue Key portal\n"
+        "`/wallet` – How to connect your wallet\n"
+        "`/price` – Check the current $TIFFY token price\n"
+        "`/leaderboard` – View top holders\n"
+        "`/info` – Learn about the $TIFFY ecosystem\n"
+        "`/help` – Show this help message\n",
+        parse_mode="Markdown"
+    )
+
 # --- Register Commands ---
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("claim", claim))
 app.add_handler(CommandHandler("price", price))
 app.add_handler(CommandHandler("leaderboard", leaderboard))
+app.add_handler(CommandHandler("wallet", wallet))
+app.add_handler(CommandHandler("info", info))
+app.add_handler(CommandHandler("help", help_command))
 
 # --- FastAPI Server ---
 web = FastAPI()
