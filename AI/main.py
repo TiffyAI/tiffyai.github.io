@@ -3,9 +3,9 @@ import logging
 import requests
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes
 
-# Load environment variables
+# Load .env variables
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -18,7 +18,7 @@ PORTAL_LINK = "https://t.me/TiffyAI_Bot?start=portal"
 
 logging.basicConfig(level=logging.INFO)
 
-# --- Handlers ---
+# --- Command Handlers ---
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -48,7 +48,7 @@ async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"💎 Current $TIFFY: *${price:.4f}*", parse_mode="Markdown")
     except Exception as e:
         await update.message.reply_text("⚠️ Couldn't fetch price.")
-        print("Price fetch error:", e)
+        logging.error("Price fetch error: %s", e)
 
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = (
@@ -71,15 +71,15 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(msg, parse_mode="Markdown")
     except Exception as e:
         await update.message.reply_text("⚠️ Leaderboard unavailable.")
-        print("Leaderboard error:", e)
+        logging.error("Leaderboard error: %s", e)
 
 async def ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🤖 AI is listening... (Coming soon 🔗)")
 
-# --- Entry point ---
+# --- Entry Point ---
 
 def main():
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app = Application.builder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("claim", claim))
@@ -89,7 +89,7 @@ def main():
     app.add_handler(CommandHandler("leaderboard", leaderboard))
     app.add_handler(CommandHandler("ai", ai))
 
-    print("🤖 TiffyAI Bot is online.")
+    logging.info("🤖 TiffyAI Bot is running...")
     app.run_polling()
 
 if __name__ == "__main__":
