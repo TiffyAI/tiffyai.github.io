@@ -3,25 +3,30 @@ import logging
 import requests
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
+from pydantic import BaseModel
 import uvicorn
+import openai
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
+# --- Setup ---
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-AI_BACKEND_URL = os.getenv("AI_BACKEND_URL")
+AI_BACKEND_URL = os.getenv("AI_BACKEND_URL")  # not used anymore
 RENDER_URL = os.getenv("RENDER_EXTERNAL_URL")
 BSCSCAN_API_KEY = os.getenv("BSCSCAN_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+openai.api_key = OPENAI_API_KEY
 
 PRICE_API_URL = "https://tiffyai.github.io/TIFFY-Market-Value/price.json"
 TOKEN_CONTRACT = "0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5"
 PORTAL_LINK = "https://tiffyai.github.io/Start"
 
+# --- Telegram Bot App ---
 app = Application.builder().token(BOT_TOKEN).build()
 
-# --- Telegram Command Handlers ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🔵 Welcome to *TiffyAI*! Tap /claim to unlock your Blue Key portal.",
@@ -72,7 +77,7 @@ async def ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     logging.info("➡️ AI ask: %s", user_input)
     try:
-        r = requests.post(AI_BACKEND_URL, timeout=60, json={
+        r = requests.post(f"{RENDER_URL}/ask", timeout=60, json={
             "messages": [
                 {"role": "system", "content": "You are TiffyAI, a Web3 oracle."},
                 {"role": "user", "content": user_input}
@@ -85,14 +90,13 @@ async def ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.error("AI error: %s", e)
         await update.message.reply_text("⚠️ AI failed—check backend.")
 
-# --- Register Telegram Command Handlers ---
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("claim", claim))
 app.add_handler(CommandHandler("price", price))
 app.add_handler(CommandHandler("leaderboard", leaderboard))
 app.add_handler(CommandHandler("ai", ai))
 
-# --- FastAPI Web Server ---
+# --- FastAPI Server ---
 web = FastAPI()
 
 @web.on_event("startup")
@@ -123,7 +127,26 @@ async def health():
 
 @web.get("/")
 async def root():
-    return {"message": "TiffyAI Bot & Web Service Online"}
+    return {"message": "TiffyAI Bot & AI Service Online"}
 
+# --- 🔮 AI Backend inside same app ---
+class AskRequest(BaseModel):
+    messages: list
+
+@web.post("/ask")
+async def ask(request: AskRequest):
+    try:
+        logging.info("🔮 Incoming AI request: %s", request.messages)
+        resp = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=request.messages,
+            temperature=0.7
+        )
+        return {"choices": resp.choices}
+    except Exception as e:
+        logging.error("OpenAI request failed: %s", e)
+        return {"error": str(e)}
+
+# --- Run the app ---
 if __name__ == "__main__":
     uvicorn.run("main:web", host="0.0.0.0", port=8000)
