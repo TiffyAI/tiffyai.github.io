@@ -11,7 +11,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-AI_BACKEND_URL = os.getenv("AI_BACKEND_URL")  # e.g. https://your-ai-backend.onrender.com/ask
+AI_BACKEND_URL = os.getenv("AI_BACKEND_URL")
 RENDER_URL = os.getenv("RENDER_EXTERNAL_URL")
 BSCSCAN_API_KEY = os.getenv("BSCSCAN_API_KEY")
 
@@ -101,7 +101,8 @@ async def startup():
     await app.start()
     await app.bot.delete_webhook(drop_pending_updates=True)
     await app.bot.set_webhook(f"{RENDER_URL}/telegram")
-    logging.info("✅ Webhook live at %s/telegram", RENDER_URL)
+    webhook_info = await app.bot.get_webhook_info()
+    logging.info("✅ Webhook set to: %s", webhook_info.url)
 
 @web.on_event("shutdown")
 async def shutdown():
@@ -111,8 +112,9 @@ async def shutdown():
 @web.post("/telegram")
 async def incoming(request: Request):
     body = await request.json()
+    logging.info("📩 Incoming Telegram update: %s", body)
     update = Update.de_json(body, app.bot)
-    await app.update_queue.put(update)
+    await app.process_update(update)
     return {"status": "ok"}
 
 @web.get("/healthcheck")
