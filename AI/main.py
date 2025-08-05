@@ -101,7 +101,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        STAR_AI_LINK,
+        f"🌟 Chat with Star AI ➤ [Launch Star AI]({STAR_AI_LINK})",
+        parse_mode="Markdown",
         disable_web_page_preview=True
     )
 
@@ -153,6 +154,5 @@ async def root():
 async def health():
     return {"status": "alive"}
 
-# --- Launch ---
 if __name__ == "__main__":
     uvicorn.run("main:web", host="0.0.0.0", port=8000)
