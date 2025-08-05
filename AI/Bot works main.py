@@ -14,7 +14,7 @@ BSCSCAN_API_KEY = os.getenv("BSCSCAN_API_KEY")
 
 TOKEN_CONTRACT = "0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5"
 PRICE_API_URL = "https://tiffyai.github.io/TIFFY-Market-Value/price.json"
-PORTAL_LINK = "https://t.me/TiffyAI_Bot?start=portal"
+PORTAL_LINK = "https://tiffyai.github.io/Start/"
 
 logging.basicConfig(level=logging.INFO)
 
