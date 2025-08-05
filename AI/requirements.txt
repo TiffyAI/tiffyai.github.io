@@ -1,6 +1,6 @@
 python-telegram-bot==21.1.1
 uvicorn
-openai
+openai>=1.0.0
 fastapi
 requests
 python-dotenv
