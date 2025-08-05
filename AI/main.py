@@ -18,6 +18,7 @@ BSCSCAN_API_KEY = os.getenv("BSCSCAN_API_KEY")
 PRICE_API_URL = "https://tiffyai.github.io/TIFFY-Market-Value/price.json"
 TOKEN_CONTRACT = "0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5"
 PORTAL_LINK = "https://tiffyai.github.io/Start"
+STAR_AI_LINK = "https://t.me/TheStarAIBot/StarAI?startapp=aW52aXRhdGlvbl9jb2RlPUsxOXc3dyZwYWdlTmFtZT1hZ2VudHMmSWQ9YWUwNzMzNjQtZTIzZi00ZjQ5LTgzZmItYzM0YjdkMDAxMGJh"
 
 # --- Telegram Bot ---
 app = Application.builder().token(BOT_TOKEN).build()
@@ -66,20 +67,20 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def wallet(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "🔐 *Wallet Connection Guide:*\n\n"
-        "You can connect your wallet using OKX, Trust Wallet, or MetaMask.\n\n"
-        "Visit the portal ➤ https://tiffyai.github.io/Start and follow the connect prompts.\n\n"
-        "Need help? DM @TiffyAI_Support",
+        "🔐 *Wallets Supported:*\n\n"
+        "- OKX\n"
+        "- Trust Wallet\n"
+        "- MetaMask\n\n"
+        "Connect through ➤ https://tiffyai.github.io/Start",
         parse_mode="Markdown"
     )
 
 async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "📘 *About $TIFFY Token:*\n\n"
-        "TIFFY is the native token powering the TiffyAI ecosystem.\n"
+        "TIFFY powers the TiffyAI ecosystem.\n"
         "- Earn it via quests & faucets\n"
-        "- Stake it in future updates\n"
-        "- Trade it on decentralized exchanges\n\n"
+        "- Stake & trade it in the future\n\n"
         "Explore ➤ https://www.tiffyai.co.za",
         parse_mode="Markdown"
     )
@@ -87,26 +88,40 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🛠️ *Bot Help Guide:*\n\n"
-        "`/start` – Introduction to TiffyAI\n"
-        "`/claim` – Access the Blue Key portal\n"
-        "`/wallet` – How to connect your wallet\n"
-        "`/price` – Check the current $TIFFY token price\n"
-        "`/leaderboard` – View top holders\n"
-        "`/info` – Learn about the $TIFFY ecosystem\n"
-        "`/help` – Show this help message\n",
+        "`/start` – Intro\n"
+        "`/claim` – Portal link\n"
+        "`/wallet` – Wallet options\n"
+        "`/price` – Check token value\n"
+        "`/leaderboard` – Top holders\n"
+        "`/info` – Token overview\n"
+        "`/ai` – Use Star AI\n"
+        "`/help` – This guide",
         parse_mode="Markdown"
     )
 
-# --- Register Commands ---
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("claim", claim))
-app.add_handler(CommandHandler("price", price))
-app.add_handler(CommandHandler("leaderboard", leaderboard))
-app.add_handler(CommandHandler("wallet", wallet))
-app.add_handler(CommandHandler("info", info))
-app.add_handler(CommandHandler("help", help_command))
+async def ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        f"🌟 Chat with Star AI ➤ [Launch Star AI]({STAR_AI_LINK})",
+        parse_mode="Markdown",
+        disable_web_page_preview=True
+    )
 
-# --- FastAPI Server ---
+# --- Register Commands ---
+commands = [
+    ("start", start),
+    ("claim", claim),
+    ("price", price),
+    ("leaderboard", leaderboard),
+    ("wallet", wallet),
+    ("info", info),
+    ("help", help_command),
+    ("ai", ai),
+]
+
+for cmd, func in commands:
+    app.add_handler(CommandHandler(cmd, func))
+
+# --- FastAPI Web Server ---
 web = FastAPI()
 
 @web.on_event("startup")
@@ -139,6 +154,5 @@ async def root():
 async def health():
     return {"status": "alive"}
 
-# --- Launch ---
 if __name__ == "__main__":
     uvicorn.run("main:web", host="0.0.0.0", port=8000)
