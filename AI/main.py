@@ -94,7 +94,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "`/price` – Check token value\n"
         "`/leaderboard` – Top holders\n"
         "`/info` – Token overview\n"
-        "`/ai` – Use Star AI\n"
+        "`/ai` – Chat with Tiffy AI\n"
         "`/help` – This guide",
         parse_mode="Markdown"
     )
