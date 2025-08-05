@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 import uvicorn
-import openai
+from openai import OpenAI
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
@@ -14,11 +14,11 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-AI_BACKEND_URL = os.getenv("AI_BACKEND_URL")  # not used anymore
 RENDER_URL = os.getenv("RENDER_EXTERNAL_URL")
 BSCSCAN_API_KEY = os.getenv("BSCSCAN_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-openai.api_key = OPENAI_API_KEY
+
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 PRICE_API_URL = "https://tiffyai.github.io/TIFFY-Market-Value/price.json"
 TOKEN_CONTRACT = "0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5"
@@ -96,7 +96,7 @@ app.add_handler(CommandHandler("price", price))
 app.add_handler(CommandHandler("leaderboard", leaderboard))
 app.add_handler(CommandHandler("ai", ai))
 
-# --- FastAPI Server ---
+# --- FastAPI Web Server ---
 web = FastAPI()
 
 @web.on_event("startup")
@@ -129,7 +129,7 @@ async def health():
 async def root():
     return {"message": "TiffyAI Bot & AI Service Online"}
 
-# --- 🔮 AI Backend inside same app ---
+# --- 🔮 AI Backend Endpoint (OpenAI v1.x) ---
 class AskRequest(BaseModel):
     messages: list
 
@@ -137,16 +137,17 @@ class AskRequest(BaseModel):
 async def ask(request: AskRequest):
     try:
         logging.info("🔮 Incoming AI request: %s", request.messages)
-        resp = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=request.messages,
             temperature=0.7
         )
-        return {"choices": resp.choices}
+        content = response.choices[0].message.content
+        return {"choices": [{"message": {"content": content}}]}
     except Exception as e:
         logging.error("OpenAI request failed: %s", e)
         return {"error": str(e)}
 
-# --- Run the app ---
+# --- Launch ---
 if __name__ == "__main__":
     uvicorn.run("main:web", host="0.0.0.0", port=8000)
