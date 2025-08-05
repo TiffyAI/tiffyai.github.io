@@ -77,7 +77,30 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.error("Leaderboard error: %s", e)
 
 async def ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🤖 AI is listening... (Coming soon 🔗)")
+    user_input = " ".join(context.args)
+    if not user_input:
+        await update.message.reply_text(
+            "🤖 Ask something after `/ai`, like `/ai What is TiffyAI?`",
+            parse_mode="Markdown"
+        )
+        return
+    try:
+        r = requests.post(
+            "https://tiffyai-bot.onrender.com/ask",
+            json={
+                "messages": [
+                    {"role": "system", "content": "You are TiffyAI, a powerful blockchain oracle and strategist."},
+                    {"role": "user", "content": user_input}
+                ]
+            },
+            timeout=15
+        )
+        r.raise_for_status()
+        content = r.json()["choices"][0]["message"]["content"]
+        await update.message.reply_text(content)
+    except Exception as e:
+        await update.message.reply_text("⚠️ AI backend error.")
+        logging.error("AI request failed: %s", e)
 
 # Telegram Bot Setup
 
@@ -111,8 +134,6 @@ async def on_shutdown():
     await app.updater.stop()
     await app.stop()
     await app.shutdown()
-
-# Entry point
 
 if __name__ == "__main__":
     uvicorn.run("main:web_app", host="0.0.0.0", port=10000)
