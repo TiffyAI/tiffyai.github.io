@@ -67,7 +67,7 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def wallet(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🔐 *Wallet Connection Guide:*\n\n"
-        "You can connect your wallet using MetaMask, Trust Wallet, or OKX.\n\n"
+        "You can connect your wallet using OKX, Trust Wallet, or MetaMask.\n\n"
         "Visit the portal ➤ https://tiffyai.github.io/Start and follow the connect prompts.\n\n"
         "Need help? DM @TiffyAI_Support",
         parse_mode="Markdown"
@@ -80,7 +80,7 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "- Earn it via quests & faucets\n"
         "- Stake it in future updates\n"
         "- Trade it on decentralized exchanges\n\n"
-        "Explore ➤ https://tiffyai.github.io",
+        "Explore ➤ https://www.tiffyai.co.za",
         parse_mode="Markdown"
     )
 
