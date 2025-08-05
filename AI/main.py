@@ -138,7 +138,7 @@ async def ask(request: AskRequest):
     try:
         logging.info("🔮 Incoming AI request: %s", request.messages)
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",
             messages=request.messages,
             temperature=0.7
         )
