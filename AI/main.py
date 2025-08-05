@@ -24,7 +24,7 @@ PRICE_API_URL = "https://tiffyai.github.io/TIFFY-Market-Value/price.json"
 TOKEN_CONTRACT = "0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5"
 PORTAL_LINK = "https://tiffyai.github.io/Start"
 
-# --- Telegram Bot App ---
+# --- Telegram Bot ---
 app = Application.builder().token(BOT_TOKEN).build()
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -77,14 +77,15 @@ async def ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     logging.info("➡️ AI ask: %s", user_input)
     try:
-        r = requests.post(f"{RENDER_URL}/ask", timeout=60, json={
-            "messages": [
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
                 {"role": "system", "content": "You are TiffyAI, a Web3 oracle."},
                 {"role": "user", "content": user_input}
-            ]
-        })
-        r.raise_for_status()
-        content = r.json()["choices"][0]["message"]["content"]
+            ],
+            temperature=0.7
+        )
+        content = response.choices[0].message.content
         await update.message.reply_text(content)
     except Exception as e:
         logging.error("AI error: %s", e)
@@ -129,7 +130,7 @@ async def health():
 async def root():
     return {"message": "TiffyAI Bot & AI Service Online"}
 
-# --- 🔮 AI Backend Endpoint (OpenAI v1.x) ---
+# --- Optional: External API call support for /ask ---
 class AskRequest(BaseModel):
     messages: list
 
