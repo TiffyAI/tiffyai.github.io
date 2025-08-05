@@ -101,7 +101,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        f"🌟 Chat with Star AI ➤ [Launch Star AI]({STAR_AI_LINK})",
+        f"🌟 Chat with Tiffy AI ➤ [Launch Star AI]({STAR_AI_LINK})",
         parse_mode="Markdown",
         disable_web_page_preview=True
     )
