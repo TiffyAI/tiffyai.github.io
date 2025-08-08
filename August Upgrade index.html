@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>TiffyAI Miner — Withdraw Preview</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+  <script defer src="lib/web3-provider.js"></script>
+  <script defer src="https://unpkg.com/web3modal@1.9.8/dist/index.js"></script>
+  <style>
+    body{margin:0;padding:0;height:100vh;width:100vw;font-family:'Segoe UI',sans-serif;background:#000;color:#00ffe7;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+    video{position:fixed;top:0;left:0;width:100vw;height:97vh;object-fit:cover;z-index:-1}
+    h1{font-size:2.2rem;margin-top:24px;text-shadow:0 0 10px #00ffe7}
+    .info{font-size:1.05rem;margin:8px 0;text-shadow:0 0 5px #00ffe7}
+    .controls{display:flex;gap:10px;margin-top:12px}
+    button{background:#00ffe7;color:#000;border:none;padding:10px 16px;border-radius:10px;font-weight:700;cursor:pointer}
+    button:disabled{background:#666;cursor:not-allowed}
+    /* modal */
+    #confirmModal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.98);border:2px solid #00ffe7;padding:18px;border-radius:10px;color:#00ffe7;display:none;z-index:2000;max-width:420px;width:92%}
+    #confirmModal h3{margin:0 0 12px;text-align:center}
+    .row{display:flex;justify-content:space-between;margin:8px 0}
+    .actions{display:flex;gap:8px;margin-top:12px}
+    .btnGrey{flex:1;padding:10px;border-radius:8px;background:#111;color:#fff;border:1px solid #333}
+    .btnAccent{flex:1;padding:10px;border-radius:8px;background:linear-gradient(90deg,#00ffe7,#00aaff);color:#000;font-weight:700;border:none}
+    .small{font-size:0.9rem;color:#9ff}
+  </style>
+</head>
+<body>
+  <video autoplay muted loop playsinline>
+    <source src="mine.mp4" type="video/mp4"/>
+  </video>
+
+  <h1>🛠 TiffyAI Miner</h1>
+  <div class="info" id="tiffyCounter">⛏️ 0.0000000 TIFFY</div>
+  <div class="info" id="blueKeys">🔵 Blue Keys: 0</div>
+  <div class="info" id="goldKeys">🟡 Gold Keys: 0</div>
+
+  <div class="controls">
+    <button id="connectBtn">🔌 Connect Wallet</button>
+    <button id="withdrawBtn" disabled>💸 Withdraw</button>
+    <button id="boostBtn">⚡ Upgrade With Key</button>
+  </div>
+
+  <!-- confirm modal -->
+  <div id="confirmModal" role="dialog" aria-modal="true">
+    <h3>Confirm Withdrawal</h3>
+    <div class="row"><div>Claim (contract) fee</div><div id="m_contractFee">- BNB</div></div>
+    <div class="row"><div>Estimated network fee</div><div id="m_gasFee">- BNB</div></div>
+    <div class="row"><div><strong>Total (est.)</strong></div><div id="m_totalFee">- BNB</div></div>
+    <div class="row"><div>Approx USD</div><div id="m_totalUSD">-</div></div>
+    <hr style="border:none;border-top:1px dashed #005766;margin:10px 0">
+    <div class="row"><div>You will receive</div><div id="m_tiffyAmount">1 TIFFY</div></div>
+    <div class="row"><div>TIFFY in BNB</div><div id="m_tiffyInBNB">- BNB</div></div>
+    <div class="row"><div>TIFFY in USD</div><div id="m_tiffyInUSD">-</div></div>
+    <div class="small">This is an estimate. Your wallet will show final gas before you sign.</div>
+    <div class="actions">
+      <button id="m_cancel" class="btnGrey">Cancel</button>
+      <button id="m_confirm" class="btnAccent">Proceed</button>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    // config
+    const CONTRACT = "0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5";
+    const ABI = [{ type:"function", name:"claim", stateMutability:"payable", inputs:[], outputs:[] },
+                 { inputs:[], name:"FIXED_BNB_FEE", outputs:[{type:"uint256"}], stateMutability:"view", type:"function" }];
+    const PRICE_JSON = "https://tiffyai.github.io/TIFFY-Market-Value/price.json";
+    const BACKEND = "https://tiffyai-wh-wa.onrender.com/reward";
+
+    // dom
+    const tiffyCounter = document.getElementById('tiffyCounter');
+    const blueKeys = document.getElementById('blueKeys');
+    const goldKeys = document.getElementById('goldKeys');
+    const connectBtn = document.getElementById('connectBtn');
+    const withdrawBtn = document.getElementById('withdrawBtn');
+    const boostBtn = document.getElementById('boostBtn');
+
+    const modal = document.getElementById('confirmModal');
+    const m_contractFee = document.getElementById('m_contractFee');
+    const m_gasFee = document.getElementById('m_gasFee');
+    const m_totalFee = document.getElementById('m_totalFee');
+    const m_totalUSD = document.getElementById('m_totalUSD');
+    const m_tiffyAmount = document.getElementById('m_tiffyAmount');
+    const m_tiffyInBNB = document.getElementById('m_tiffyInBNB');
+    const m_tiffyInUSD = document.getElementById('m_tiffyInUSD');
+    const m_cancel = document.getElementById('m_cancel');
+    const m_confirm = document.getElementById('m_confirm');
+
+    // local storage keys
+    const CK = 'tiffy_balance', SK = 'tiffy_speed', LK = 'tiffy_last_claim';
+    let balance = parseFloat(localStorage.getItem(CK)) || 0;
+    let speed = parseFloat(localStorage.getItem(SK)) || 0.0000001;
+
+    // web3 vars
+    let web3, account, contract, provider;
+    let tiffyPriceUSD = null; // from your price.json
+    let bnbPriceUSD = null;   // from CoinGecko
+
+    function updateKeys(){
+      blueKeys.textContent = `🔵 Blue Keys: ${parseInt(localStorage.getItem("tiffyBlueKeys"))||0}`;
+      goldKeys.textContent = `🟡 Gold Keys: ${parseInt(localStorage.getItem("gold"))||0}`;
+    }
+    function updateBalance(){
+      tiffyCounter.textContent = `⛏️ ${balance.toFixed(7)} TIFFY`;
+      const last = localStorage.getItem(LK);
+      const can = balance >= 1 && (!last || Date.now() - parseInt(last) > 86400000);
+      withdrawBtn.disabled = !can;
+    }
+
+    setInterval(()=>{
+      const last = localStorage.getItem(LK);
+      const ready = !last || (Date.now() - parseInt(last) > 86400000);
+      if(balance < 1 && ready){
+        balance += speed;
+        localStorage.setItem(CK, balance);
+        updateBalance();
+      }
+    },1000);
+
+    boostBtn.addEventListener('click', ()=>{
+      let blue = parseInt(localStorage.getItem("tiffyBlueKeys"))||0;
+      if(blue < 1) return alert("❌ Not enough Blue Keys.");
+      blue--; speed *= 2;
+      localStorage.setItem("tiffyBlueKeys", blue);
+      localStorage.setItem(SK, speed);
+      alert("⚡ Mining Boost Activated!");
+      updateKeys();
+    });
+
+    // fetch prices
+    async function fetchPrices(){
+      try {
+        const r = await fetch(PRICE_JSON);
+        const j = await r.json();
+        // your price JSON earlier used tiffyToUSD — fallback to other shapes if needed
+        tiffyPriceUSD = parseFloat(j.tiffyToUSD || j.price || j.price_usd || j.tiffyPrice || 0);
+      } catch (e){ console.warn("Price.json error", e); tiffyPriceUSD = null; }
+
+      try {
+        const r2 = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd');
+        const j2 = await r2.json();
+        bnbPriceUSD = parseFloat(j2.binancecoin.usd || 0);
+      } catch (e){ console.warn("CoinGecko error", e); bnbPriceUSD = null; }
+    }
+
+    // connect (Web3Modal v1 style like your current flow)
+    connectBtn.addEventListener('click', async ()=>{
+      const providerOptions = {
+        walletconnect: {
+          package: window.WalletConnectProvider ? window.WalletConnectProvider.default : null,
+          options: { rpc: { 56: "https://bsc-dataseed.binance.org/" } }
+        }
+      };
+      const web3Modal = new window.Web3Modal.default({ cacheProvider:false, providerOptions });
+      try {
+        provider = await web3Modal.connect();
+        web3 = new Web3(provider);
+        const accounts = await web3.eth.getAccounts();
+        account = accounts[0];
+        contract = new web3.eth.Contract(ABI, CONTRACT);
+        connectBtn.innerText = `✅ ${account.slice(0,6)}... Connected`;
+        connectBtn.disabled = true;
+        await fetchPrices();
+        updateBalance();
+      } catch (err) {
+        console.error("Connect failed", err);
+        alert("❌ Wallet connect failed.");
+      }
+    });
+
+    // pre-confirm modal: estimate gas, compute fees and TIFFY value
+    async function showPreConfirmAndEstimate(){
+      if(!contract || !account) return alert("Connect your wallet first.");
+
+      // get contract fee
+      let contractFeeWei = "0";
+      try { contractFeeWei = await contract.methods.FIXED_BNB_FEE().call(); } catch(e){ console.warn("FIXED_BNB_FEE read failed", e); }
+      const contractFeeBNB = parseFloat(web3.utils.fromWei(contractFeeWei.toString(), "ether"));
+
+      // estimate gas and gas price
+      let estGas = 120000;
+      try {
+        estGas = await contract.methods.claim().estimateGas({ from: account, value: contractFeeWei });
+      } catch(e){ console.warn("estimateGas failed, using fallback", e); }
+      let gasPrice = await web3.eth.getGasPrice().catch(()=> null);
+      if(!gasPrice) gasPrice = "20000000000"; // 20 gwei fallback
+
+      const gasFeeWei = BigInt(estGas) * BigInt(gasPrice);
+      const gasBNB = parseFloat(web3.utils.fromWei(gasFeeWei.toString(),"ether"));
+
+      const totalBNB = contractFeeBNB + gasBNB;
+
+      // refresh prices if null
+      if(tiffyPriceUSD === null || bnbPriceUSD === null) await fetchPrices();
+
+      // TIFFY receive (this claim returns 1 TIFFY per your contract)
+      const tiffyReceive = 1;
+      const tiffyUSD = tiffyPriceUSD ? (tiffyReceive * tiffyPriceUSD) : null;
+      const tiffyInBNB = (tiffyPriceUSD && bnbPriceUSD) ? (tiffyPriceUSD / bnbPriceUSD * tiffyReceive) : null;
+
+      // fill modal
+      m_contractFee.textContent = contractFeeBNB.toFixed(6) + " BNB";
+      m_gasFee.textContent = gasBNB.toFixed(6) + " BNB";
+      m_totalFee.textContent = totalBNB.toFixed(6) + " BNB";
+      m_totalUSD.textContent = (bnbPriceUSD ? (totalBNB * bnbPriceUSD).toFixed(2) : "-");
+      m_tiffyAmount.textContent = `${tiffyReceive} TIFFY`;
+      m_tiffyInBNB.textContent = tiffyInBNB ? tiffyInBNB.toFixed(6) + " BNB" : "-";
+      m_tiffyInUSD.textContent = tiffyUSD ? "$" + tiffyUSD.toFixed(2) : "-";
+
+      modal.style.display = "block";
+
+      // return promise resolved on user choice
+      return new Promise(resolve => {
+        m_cancel.onclick = () => { modal.style.display = "none"; resolve(false); };
+        m_confirm.onclick = () => { modal.style.display = "none"; resolve({ estGas, gasPrice, contractFeeWei }); };
+      });
+    }
+
+    // withdraw flow
+    withdrawBtn.addEventListener('click', async ()=>{
+      if(!contract || !account) return alert("❌ Connect wallet first.");
+
+      const last = localStorage.getItem(LK);
+      if(last && Date.now() - parseInt(last) < 86400000) return alert("⏳ You must wait before next claim.");
+
+      const amount = parseFloat(localStorage.getItem(CK)) || 0;
+      if(amount < 1) return alert("❌ Not enough TIFFY to claim (min 1).");
+
+      // show pre-confirm modal
+      const choice = await showPreConfirmAndEstimate();
+      if(!choice) return; // cancelled
+
+      // disable UI
+      withdrawBtn.disabled = true;
+      withdrawBtn.innerText = "Processing...";
+
+      try {
+        const { estGas, gasPrice, contractFeeWei } = choice;
+        // send tx (explicit gas & gasPrice)
+        const tx = await contract.methods.claim().send({
+          from: account,
+          value: contractFeeWei,
+          gas: Math.floor(estGas * 1.2),
+          gasPrice: gasPrice
+        });
+
+        // on success clear local balance and set claim timestamp
+        localStorage.setItem(CK, "0");
+        localStorage.setItem(LK, Date.now().toString());
+
+        // optional backend log if you want to send remainder (per your earlier logic)
+        // const backendAmt = amount - 1;
+        // if(backendAmt > 0) await fetch(BACKEND,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet:account,amount:backendAmt})});
+
+        alert("✅ 1 TIFFY Claimed!");
+        balance = 0;
+        updateBalance();
+      } catch (err) {
+        console.error("Claim failed:", err);
+        alert("❌ Claim failed or transaction rejected.");
+      } finally {
+        withdrawBtn.disabled = false;
+        withdrawBtn.innerText = "💸 Withdraw";
+      }
+    });
+
+    // initial UI
+    updateKeys();
+    updateBalance();
+    // fetch initial prices (non-blocking)
+    fetchPrices();
+  })();
+  </script>
+</body>
+</html>
