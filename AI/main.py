@@ -92,7 +92,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "`/claim` – Portal link\n"
         "`/wallet` – Wallet options\n"
         "`/price` – Check token value\n"
-        "`/leaderboard` – Top holders\n"
+        "`/install` – Add TiffyAI Platform to Home screen\n"
         "`/info` – Token overview\n"
         "`/ai` – Chat with Tiffy AI\n"
         "`/help` – This guide",
@@ -111,7 +111,7 @@ commands = [
     ("start", start),
     ("claim", claim),
     ("price", price),
-    ("leaderboard", leaderboard),
+    ("install", install),
     ("wallet", wallet),
     ("info", info),
     ("help", help_command),
