@@ -47,6 +47,18 @@ async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.error("Price fetch error: %s", e)
         await update.message.reply_text("⚠️ Sorry, price unavailable.")
 
+# --- new install command ---
+async def install(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "📲 *Install TiffyAI to your Home Screen!*\n\n"
+        "1. Open this link ➤ https://tiffyai.github.io/Cortex\n"
+        "2. Tap the browser menu (⋮ or Share icon)\n"
+        "3. Select *Add to Home Screen*\n\n"
+        "Now you can Play & Earn anytime 🚀",
+        parse_mode="Markdown"
+    )
+
+# --- keeping leaderboard (disabled for now) ---
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         r = requests.get(
@@ -111,7 +123,8 @@ commands = [
     ("start", start),
     ("claim", claim),
     ("price", price),
-    ("install", install),
+    ("install", install),  # ✅ active
+    # ("leaderboard", leaderboard),  # ❌ disabled for now
     ("wallet", wallet),
     ("info", info),
     ("help", help_command),
