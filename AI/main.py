@@ -79,8 +79,8 @@ async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "📘 *About $TIFFY Token:*\n\n"
         "TIFFY powers the TiffyAI ecosystem.\n"
-        "- Earn it via quests & faucets\n"
-        "- Stake & trade it in the future\n\n"
+        "- Earn it via games, quests & faucets\n"
+        "- Stake & AI Trading available soon\n\n"
         "Explore ➤ https://www.tiffyai.co.za",
         parse_mode="Markdown"
     )
@@ -152,7 +152,7 @@ async def root():
 
 @web.get("/healthcheck")
 async def health():
-    return {"status": "alive"}
+    return {"status": "Alive & Kicking"}
 
 if __name__ == "__main__":
     uvicorn.run("main:web", host="0.0.0.0", port=8000)
