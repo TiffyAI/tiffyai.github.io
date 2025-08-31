@@ -17,7 +17,7 @@ BSCSCAN_API_KEY = os.getenv("BSCSCAN_API_KEY")
 
 PRICE_API_URL = "https://tiffyai.github.io/TIFFY-Market-Value/price.json"
 TOKEN_CONTRACT = "0xE488253DD6B4D31431142F1b7601C96f24Fb7dd5"
-PORTAL_LINK = "https://tiffyai.github.io/Start"
+PORTAL_LINK = "https://tiffyai.github.io/Activating-Portal"
 STAR_AI_LINK = "https://t.me/TheStarAIBot/StarAI?startapp=aW52aXRhdGlvbl9jb2RlPUsxOXc3dyZwYWdlTmFtZT1hZ2VudHMmSWQ9YWUwNzMzNjQtZTIzZi00ZjQ5LTgzZmItYzM0YjdkMDAxMGJh"
 
 # --- Telegram Bot ---
